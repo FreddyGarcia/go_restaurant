@@ -1,11 +1,11 @@
-from flask import Blueprint, jsonify, json, request, render_template, session, url_for
+from flask import Blueprint, jsonify
 
 from app import app, db
 
 routes = Blueprint('routes', __name__, url_prefix='/')
 
-@routes.route("/works")
-def logout():
+@routes.route("works")
+def works():
 	return "It works!"
 
 app.register_blueprint(routes)
