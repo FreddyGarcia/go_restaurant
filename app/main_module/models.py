@@ -1,6 +1,5 @@
 # app.models
 from sqlalchemy.sql import func
-# from geoalchemy2 import Geometry
 from geoalchemy2.types import Geometry
 
 from app import db
@@ -42,7 +41,8 @@ class Restaurant(db.Model):
 	id 	= db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(80), unique=True, nullable=False)
 	categories = db.relationship('Category', secondary=categories, backref=db.backref('categories', lazy='dynamic'))
-	locations = db.relationship('Location', backref='restaurant', lazy='dynamic')
+	# locations = db.relationship('Location', backref='restaurant', lazy='dynamic')
+	location = db.Column(Geometry("POINT"))
 
 	def __init__(self, name=None):
 		self.name = name
@@ -79,40 +79,10 @@ class User(db.Model):
 
 
 
-class Point(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    point = db.Column(Geometry("POINT"))
-
-
-class MultiPoint(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    point = db.Column(Geometry("MULTIPOINT"))
-
-
-class Polygon(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    point = db.Column(Geometry("POLYGON"))
-
-
-class MultiPolygon(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    point = db.Column(Geometry("MULTIPOLYGON"))
-
-
-class LineString(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    point = db.Column(Geometry("LINESTRING"))
-
-
-class MultiLineString(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    point = db.Column(Geometry("MULTILINESTRING"))
+# class Point(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(64), unique=True)
+#     point = db.Column(Geometry("POINT"))
 
 
 

@@ -1,12 +1,12 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, redirect
 
-from app import app, db
+from app import app
 
 routes = Blueprint('routes', __name__, url_prefix='/')
 
-@routes.route("works")
+@routes.route("")
 def works():
-	return "It works!"
+    return redirect("/admin")
 
 app.register_blueprint(routes)
 

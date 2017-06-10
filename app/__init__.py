@@ -15,3 +15,6 @@ from app.main_module.routes import routes
 
 # registre apis
 from app.main_module import api
+
+# administration
+from app.main_module.admin import admin
