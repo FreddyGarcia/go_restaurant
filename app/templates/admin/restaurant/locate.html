@@ -1,0 +1,152 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <style>
+       #map {
+        height: 400px;
+        width: 100%;
+       }
+    </style>
+
+	<div ng-app='todoApp'>
+
+		<div ng-controller='mainController'>
+		    <div class="col-md-3">
+				<div class="list-group">
+				  <a href="#" class="list-group-item active">
+				    Selecciona un Restaurante
+				  </a>
+				  <a href="#" class="list-group-item" ng-repeat='r in restaurants' ng-click='loadLocation(r)'>[[r.name]]</a>
+				</div>
+		    </div>
+		    <div class="col-md-9">
+			    <div id="map"></div>
+		    </div>
+		    <div class="col-md-12">
+			    <div class="col-md-offset-10 col-md-2">
+				    <br>
+				    <button class="btn btn-primary" ng-click='centerAtStoDgo()'>Centrar en Sto Dgo</button>
+			    </div>
+		    </div>
+		</div>
+
+	</div>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc-RqMudFgj_-rk8VmaNQA9PPa_p47SLI&callback=initMap"></script>
+	<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js'></script>
+    <script src="data:application/octet-stream;base64,LyoqDQogKiBNb2R1bGUgZm9yIGRpc3BsYXlpbmcgIldhaXRpbmcgZm9yLi4uIiBkaWFsb2cgdXNpbmcgQm9vdHN0cmFwDQogKg0KICogQGF1dGhvciBFdWdlbmUgTWFzbG92aWNoIDxlaHBjQGVtNDIucnU+DQogKi8NCg0KKGZ1bmN0aW9uIChyb290LCBmYWN0b3J5KSB7DQoJJ3VzZSBzdHJpY3QnOw0KDQoJaWYgKHR5cGVvZiBkZWZpbmUgPT09ICdmdW5jdGlvbicgJiYgZGVmaW5lLmFtZCkgew0KCQlkZWZpbmUoWydqcXVlcnknXSwgZnVuY3Rpb24gKCQpIHsNCgkJCXJldHVybiAocm9vdC53YWl0aW5nRGlhbG9nID0gZmFjdG9yeSgkKSk7DQoJCX0pOw0KCX0NCgllbHNlIHsNCgkJcm9vdC53YWl0aW5nRGlhbG9nID0gcm9vdC53YWl0aW5nRGlhbG9nIHx8IGZhY3Rvcnkocm9vdC5qUXVlcnkpOw0KCX0NCg0KfSh0aGlzLCBmdW5jdGlvbiAoJCkgew0KCSd1c2Ugc3RyaWN0JzsNCg0KCS8qKg0KCSAqIERpYWxvZyBET00gY29uc3RydWN0b3INCgkgKi8NCglmdW5jdGlvbiBjb25zdHJ1Y3REaWFsb2coJGRpYWxvZykgew0KCQkvLyBEZWxldGluZyBwcmV2aW91cyBpbmNhcm5hdGlvbiBvZiB0aGUgZGlhbG9nDQoJCWlmICgkZGlhbG9nKSB7DQoJCQkkZGlhbG9nLnJlbW92ZSgpOw0KCQl9DQoJCXJldHVybiAkKA0KCQkJJzxkaXYgY2xhc3M9Im1vZGFsIGZhZGUiIGRhdGEtYmFja2Ryb3A9InN0YXRpYyIgZGF0YS1rZXlib2FyZD0iZmFsc2UiIHRhYmluZGV4PSItMSIgcm9sZT0iZGlhbG9nIiBhcmlhLWhpZGRlbj0idHJ1ZSIgc3R5bGU9InBhZGRpbmctdG9wOjE1JTsgb3ZlcmZsb3cteTp2aXNpYmxlOyI+JyArDQoJCQkJJzxkaXYgY2xhc3M9Im1vZGFsLWRpYWxvZyBtb2RhbC1tIj4nICsNCgkJCQkJJzxkaXYgY2xhc3M9Im1vZGFsLWNvbnRlbnQiPicgKw0KCQkJCQkJJzxkaXYgY2xhc3M9Im1vZGFsLWhlYWRlciIgc3R5bGU9ImRpc3BsYXk6IG5vbmU7Ij48L2Rpdj4nICsNCgkJCQkJCSc8ZGl2IGNsYXNzPSJtb2RhbC1ib2R5Ij4nICsNCgkJCQkJCQknPGRpdiBjbGFzcz0icHJvZ3Jlc3MgcHJvZ3Jlc3Mtc3RyaXBlZCBhY3RpdmUiIHN0eWxlPSJtYXJnaW4tYm90dG9tOjA7Ij4nICsNCgkJCQkJCQkJJzxkaXYgY2xhc3M9InByb2dyZXNzLWJhciIgc3R5bGU9IndpZHRoOiAxMDAlIj48L2Rpdj4nICsNCgkJCQkJCQknPC9kaXY+JyArDQoJCQkJCQknPC9kaXY+JyArDQoJCQkJCSc8L2Rpdj4nICsNCgkJCQknPC9kaXY+JyArDQoJCQknPC9kaXY+Jw0KCQkpOw0KCX0NCg0KCXZhciAkZGlhbG9nLCAvLyBEaWFsb2cgb2JqZWN0DQoJCXNldHRpbmdzOyAvLyBEaWFsb2cgc2V0dGluZ3MNCg0KCXJldHVybiB7DQoJCS8qKg0KCQkgKiBPcGVucyBvdXIgZGlhbG9nDQoJCSAqIEBwYXJhbSBtZXNzYWdlIEN1c3RvbSBtZXNzYWdlDQoJCSAqIEBwYXJhbSBvcHRpb25zIEN1c3RvbSBvcHRpb25zOg0KCQkgKiAgIG9wdGlvbnMuaGVhZGVyVGV4dCAtIGlmIHRoZSBvcHRpb24gaXMgc2V0IHRvIGJvb2xlYW4gZmFsc2UsDQoJCSAqICAgICBpdCB3aWxsIGhpZGUgdGhlIGhlYWRlciBhbmQgIm1lc3NhZ2UiIHdpbGwgYmUgc2V0IGluIGEgcGFyYWdyYXBoIGFib3ZlIHRoZSBwcm9ncmVzcyBiYXIuDQoJCSAqICAgICBXaGVuIGhlYWRlclRleHQgaXMgYSBub3QtZW1wdHkgc3RyaW5nLCAibWVzc2FnZSIgYmVjb21lcyBhIGNvbnRlbnQNCgkJICogICAgIGFib3ZlIHRoZSBwcm9ncmVzcyBiYXIgYW5kIGhlYWRlclRleHQgc3RyaW5nIHdpbGwgYmUgc2V0IGFzIGEgdGV4dCBpbnNpZGUgdGhlIEgzOw0KCQkgKiAgIG9wdGlvbnMuaGVhZGVyU2l6ZSAtIHRoaXMgd2lsbCBnZW5lcmF0ZSBhIGhlYWRpbmcgY29ycmVzcG9uZGluZyB0byB0aGUgc2l6ZSBudW1iZXIuIExpa2UgPGgxPiwgPGgyPiwgPGgzPiBldGM7DQoJCSAqICAgb3B0aW9ucy5oZWFkZXJDbGFzcyAtIGV4dHJhIGNsYXNzKGVzKSBmb3IgdGhlIGhlYWRlciB0YWc7DQoJCSAqICAgb3B0aW9ucy5kaWFsb2dTaXplIC0gYm9vdHN0cmFwIHBvc3RmaXggZm9yIGRpYWxvZyBzaXplLCBlLmcuICJzbSIsICJtIjsNCgkJICogICBvcHRpb25zLnByb2dyZXNzVHlwZSAtIGJvb3RzdHJhcCBwb3N0Zml4IGZvciBwcm9ncmVzcyBiYXIgdHlwZSwgZS5nLiAic3VjY2VzcyIsICJ3YXJuaW5nIjsNCgkJICogICBvcHRpb25zLmNvbnRlbnRFbGVtZW50IC0gZGV0ZXJtaW5lcyB0aGUgdGFnIG9mIHRoZSBjb250ZW50IGVsZW1lbnQuDQoJCSAqICAgICBEZWZhdWx0cyB0byAicCIsIHdoaWNoIHdpbGwgZ2VuZXJhdGUgYSA8cD4gdGFnOw0KCQkgKiAgIG9wdGlvbnMuY29udGVudENsYXNzIC0gZXh0cmEgY2xhc3MoZXMpIGZvciB0aGUgY29udGVudCB0YWcuDQoJCSAqLw0KCQlzaG93OiBmdW5jdGlvbiAobWVzc2FnZSwgb3B0aW9ucykgew0KCQkJLy8gQXNzaWduaW5nIGRlZmF1bHRzDQoJCQlpZiAodHlwZW9mIG9wdGlvbnMgPT09ICd1bmRlZmluZWQnKSB7DQoJCQkJb3B0aW9ucyA9IHt9Ow0KCQkJfQ0KCQkJaWYgKHR5cGVvZiBtZXNzYWdlID09PSAndW5kZWZpbmVkJykgew0KCQkJCW1lc3NhZ2UgPSAnTG9hZGluZyc7DQoJCQl9DQoJCQlzZXR0aW5ncyA9ICQuZXh0ZW5kKHsNCgkJCQloZWFkZXJUZXh0OiAnJywNCgkJCQloZWFkZXJTaXplOiAzLA0KCQkJCWhlYWRlckNsYXNzOiAnJywNCgkJCQlkaWFsb2dTaXplOiAnbScsDQoJCQkJcHJvZ3Jlc3NUeXBlOiAnJywNCgkJCQljb250ZW50RWxlbWVudDogJ3AnLA0KCQkJCWNvbnRlbnRDbGFzczogJ2NvbnRlbnQnLA0KCQkJCW9uSGlkZTogbnVsbCwgLy8gVGhpcyBjYWxsYmFjayBydW5zIGFmdGVyIHRoZSBkaWFsb2cgd2FzIGhpZGRlbg0KCQkJCW9uU2hvdzogbnVsbCAvLyBUaGlzIGNhbGxiYWNrIHJ1bnMgYWZ0ZXIgdGhlIGRpYWxvZyB3YXMgc2hvd24NCgkJCX0sIG9wdGlvbnMpOw0KDQoJCQl2YXIgJGhlYWRlclRhZywgJGNvbnRlbnRUYWc7DQoNCgkJCSRkaWFsb2cgPSBjb25zdHJ1Y3REaWFsb2coJGRpYWxvZyk7DQoNCgkJCS8vIENvbmZpZ3VyaW5nIGRpYWxvZw0KCQkJJGRpYWxvZy5maW5kKCcubW9kYWwtZGlhbG9nJykuYXR0cignY2xhc3MnLCAnbW9kYWwtZGlhbG9nJykuYWRkQ2xhc3MoJ21vZGFsLScgKyBzZXR0aW5ncy5kaWFsb2dTaXplKTsNCgkJCSRkaWFsb2cuZmluZCgnLnByb2dyZXNzLWJhcicpLmF0dHIoJ2NsYXNzJywgJ3Byb2dyZXNzLWJhcicpOw0KCQkJaWYgKHNldHRpbmdzLnByb2dyZXNzVHlwZSkgew0KCQkJCSRkaWFsb2cuZmluZCgnLnByb2dyZXNzLWJhcicpLmFkZENsYXNzKCdwcm9ncmVzcy1iYXItJyArIHNldHRpbmdzLnByb2dyZXNzVHlwZSk7DQoJCQl9DQoNCgkJCS8vIEdlbmVyYXRlIGhlYWRlciB0YWcNCgkJCSRoZWFkZXJUYWcgPSAkKCc8aCcgKyBzZXR0aW5ncy5oZWFkZXJTaXplICsgJyAvPicpOw0KCQkJJGhlYWRlclRhZy5jc3MoeyAnbWFyZ2luJzogMCB9KTsNCgkJCWlmIChzZXR0aW5ncy5oZWFkZXJDbGFzcykgew0KCQkJCSRoZWFkZXJUYWcuYWRkQ2xhc3Moc2V0dGluZ3MuaGVhZGVyQ2xhc3MpOw0KCQkJfQ0KDQoJCQkvLyBHZW5lcmF0ZSBjb250ZW50IHRhZw0KCQkJJGNvbnRlbnRUYWcgPSAkKCc8JyArIHNldHRpbmdzLmNvbnRlbnRFbGVtZW50ICsgJyAvPicpOw0KCQkJaWYgKHNldHRpbmdzLmNvbnRlbnRDbGFzcykgew0KCQkJCSRjb250ZW50VGFnLmFkZENsYXNzKHNldHRpbmdzLmNvbnRlbnRDbGFzcyk7DQoJCQl9DQoNCgkJCWlmIChzZXR0aW5ncy5oZWFkZXJUZXh0ID09PSBmYWxzZSkgew0KCQkJCSRjb250ZW50VGFnLmh0bWwobWVzc2FnZSk7DQoJCQkJJGRpYWxvZy5maW5kKCcubW9kYWwtYm9keScpLnByZXBlbmQoJGNvbnRlbnRUYWcpOw0KCQkJfQ0KCQkJZWxzZSBpZiAoc2V0dGluZ3MuaGVhZGVyVGV4dCkgew0KCQkJCSRoZWFkZXJUYWcuaHRtbChzZXR0aW5ncy5oZWFkZXJUZXh0KTsNCgkJCQkkZGlhbG9nLmZpbmQoJy5tb2RhbC1oZWFkZXInKS5odG1sKCRoZWFkZXJUYWcpLnNob3coKTsNCg0KCQkJCSRjb250ZW50VGFnLmh0bWwobWVzc2FnZSk7DQoJCQkJJGRpYWxvZy5maW5kKCcubW9kYWwtYm9keScpLnByZXBlbmQoJGNvbnRlbnRUYWcpOw0KCQkJfQ0KCQkJZWxzZSB7DQoJCQkJJGhlYWRlclRhZy5odG1sKG1lc3NhZ2UpOw0KCQkJCSRkaWFsb2cuZmluZCgnLm1vZGFsLWhlYWRlcicpLmh0bWwoJGhlYWRlclRhZykuc2hvdygpOw0KCQkJfQ0KDQoJCQkvLyBBZGRpbmcgY2FsbGJhY2tzDQoJCQlpZiAodHlwZW9mIHNldHRpbmdzLm9uSGlkZSA9PT0gJ2Z1bmN0aW9uJykgew0KCQkJCSRkaWFsb2cub2ZmKCdoaWRkZW4uYnMubW9kYWwnKS5vbignaGlkZGVuLmJzLm1vZGFsJywgZnVuY3Rpb24gKCkgew0KCQkJCQlzZXR0aW5ncy5vbkhpZGUuY2FsbCgkZGlhbG9nKTsNCgkJCQl9KTsNCgkJCX0NCgkJCWlmICh0eXBlb2Ygc2V0dGluZ3Mub25TaG93ID09PSAnZnVuY3Rpb24nKSB7DQoJCQkJJGRpYWxvZy5vZmYoJ3Nob3duLmJzLm1vZGFsJykub24oJ3Nob3duLmJzLm1vZGFsJywgZnVuY3Rpb24gKCkgew0KCQkJCQlzZXR0aW5ncy5vblNob3cuY2FsbCgkZGlhbG9nKTsNCgkJCQl9KTsNCgkJCX0NCgkJCS8vIE9wZW5pbmcgZGlhbG9nDQoJCQkkZGlhbG9nLm1vZGFsKCk7DQoJCX0sDQoJCS8qKg0KCQkgKiBDbG9zZXMgZGlhbG9nDQoJCSAqLw0KCQloaWRlOiBmdW5jdGlvbiAoKSB7DQoJCQlpZiAodHlwZW9mICRkaWFsb2cgIT09ICd1bmRlZmluZWQnKSB7DQoJCQkJJGRpYWxvZy5tb2RhbCgnaGlkZScpOw0KCQkJfQ0KCQl9LA0KCQkvKioNCgkJICogQ2hhbmdlcyBvciBkaXNwbGF5cyBjdXJyZW50IGRpYWxvZyBtZXNzYWdlDQoJCSAqLw0KCQltZXNzYWdlOiBmdW5jdGlvbiAobmV3TWVzc2FnZSkgew0KCQkJaWYgKHR5cGVvZiAkZGlhbG9nICE9PSAndW5kZWZpbmVkJykgew0KCQkJCWlmICh0eXBlb2YgbmV3TWVzc2FnZSAhPT0gJ3VuZGVmaW5lZCcpIHsNCgkJCQkJcmV0dXJuICRkaWFsb2cuZmluZCgnLm1vZGFsLWhlYWRlcj5oJyArIHNldHRpbmdzLmhlYWRlclNpemUpLmh0bWwobmV3TWVzc2FnZSk7DQoJCQkJfQ0KCQkJCWVsc2Ugew0KCQkJCQlyZXR1cm4gJGRpYWxvZy5maW5kKCcubW9kYWwtaGVhZGVyPmgnICsgc2V0dGluZ3MuaGVhZGVyU2l6ZSkuaHRtbCgpOw0KCQkJCX0NCgkJCX0NCgkJfQ0KCX07DQoNCn0pKTs="></script>
+	<script>
+		angular.module('todoApp', [])
+		.config(function($interpolateProvider) {
+			$interpolateProvider.startSymbol('[[');
+			$interpolateProvider.endSymbol(']]');
+		})
+		.controller('mainController', function($scope, $http) {
+
+			function getRestaurants() {
+			  	$http.get('/api/restaurant')
+			  		.then(function (res) {
+			  			$scope.restaurants = res.data.objects;
+			  		})
+			}
+
+			function updateRestaurantPosition(position) {
+	        	$http.put('/api/restaurant/' + $scope.restaurant.id, position)
+			}
+
+			function addMarker(position) {
+				// if marker on map exixsts, we remove it
+		  		if ($scope.marker) {
+			  		$scope.marker.setMap(null);
+			  		delete $scope.marker;
+		  		}
+
+				// add market to map
+				$scope.marker = new google.maps.Marker({
+					position: position,
+					icon : 'http://maps.google.com/mapfiles/kml/pal2/icon36.png',
+					animation: google.maps.Animation.DROP,
+					draggable: true,
+					map: map
+				});
+
+				// update restaurant latitude/longitude on marker drag
+		        $scope.marker.addListener('dragend', function (t) {
+		        	var data = { lat: position.lat(), lng : position.lng()};
+		        	updateRestaurantPosition(position);
+		        });
+			}
+
+			$scope.centerAtStoDgo = function () {
+				var stoDgo = {lat: 18.4847289, lng: -69.919273};
+				addMarker(stoDgo)
+				map.setCenter(stoDgo);
+				updateRestaurantPosition(stoDgo)
+			}
+
+		  	$scope.loadLocation = function (restaurant) {
+		        var position = {lat: restaurant.lat, lng: restaurant.lng};
+		  		$scope.restaurant = restaurant;
+
+		  		addMarker(position);
+		  		map.setCenter(position);
+
+		  		// reload restaurants
+		  		getRestaurants();
+		  	}
+
+		getRestaurants();
+	})
+
+
+	function initMap() {
+		var stoDgo = {lat: 18.4847289, lng: -69.919273};
+		map = new google.maps.Map(document.getElementById('map'), {
+		  zoom: 14,
+		  minZoom: 14,
+		  center: stoDgo
+		});
+	}
+
+	// catch all XMLHttpRequests
+	(function() {
+	    var origOpen = XMLHttpRequest.prototype.open;
+	    XMLHttpRequest.prototype.open = function() {
+	    	waitingDialog.show()
+	        this.addEventListener('load', function() {
+		    	waitingDialog.hide()
+	        });
+	        origOpen.apply(this, arguments);
+	    };
+	})();
+
+
+  //     $(document).ready(function () {
+
+		// var origin1 =  new google.maps.LatLng(18.4978342,-69.8224757)
+		// var destinationA =  new google.maps.LatLng(18.4969796,-69.8311446)
+
+		// var service = new google.maps.DistanceMatrixService();
+
+		// service.getDistanceMatrix(
+		//   {
+		//     origins: [origin1],
+		//     destinations: [destinationA],
+		//     travelMode: 'DRIVING',
+		//     unitSystem: UnitSystem,
+		// 	    avoidHighways: Boolean,
+		// 	    avoidTolls: Boolean,
+		//   }, function (response, status) {
+		//   	console.log(response)
+		// 	  	console.log(status)
+		//   });
+
+  //     })
+
+
+
+	</script>
+{% endblock %}
