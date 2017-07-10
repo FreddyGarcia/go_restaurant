@@ -6,6 +6,7 @@ Debug = True
 # Application directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+# Database config
 DB_CONFIG = {
     'PROTOCOL': 'mysql+pymysql',
     'HOST': '127.0.0.1',
@@ -15,15 +16,28 @@ DB_CONFIG = {
     'DB': 'go_restaurant'
 }
 
-# Database config
 SQLALCHEMY_DATABASE_URI = "{PROTOCOL}://{USER}:{PASS}@{HOST}/{DB}".format(**DB_CONFIG)
-# SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{USER}:{PASS}@{HOST}:{PORT}/{NAME}'.format(**DB_CONFIG)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 DATABASE_CONNECT_OPTIONS = {}
 
-# Mapbox config
-MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoiem9yZW4xMDEiLCJhIjoiY2oza3ZtOHJlMDB2ZzJ3bjN2OGVoandzciJ9.-dWEZBmKwQvfkzsh3c72wA'
-MAPBOX_MAP_ID  = 'zoren101.cj3n1pd1k002x33ojv3fcogoq-1eqxa'
+# Flask-Security config
+SECURITY_URL_PREFIX = "/admin"
+SECURITY_PASSWORD_HASH = "pbkdf2_sha512"
+SECURITY_PASSWORD_SALT = "ATGUOHAELKiubahiughaerGOJAEGj"
+
+# Flask-Security URLs, overridden because they don't put a / at the end
+# SECURITY_LOGIN_URL = "/login/"
+# SECURITY_LOGOUT_URL = "/logout/"
+# SECURITY_REGISTER_URL = "/register/"
+
+# SECURITY_POST_LOGIN_VIEW = "/admin/"
+# SECURITY_POST_LOGOUT_VIEW = "/admin/"
+# SECURITY_POST_REGISTER_VIEW = "/admin/"
+
+# Flask-Security features
+SECURITY_REGISTERABLE = True
+SECURITY_SEND_REGISTER_EMAIL = False
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Session key
 SECRET_KEY = 'secret'

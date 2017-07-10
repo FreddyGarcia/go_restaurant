@@ -1,8 +1,12 @@
 # app.models
-from sqlalchemy.sql import func
 from collections import namedtuple
+from flask_admin import helpers as admin_helpers
+from flask_security.utils import verify_password
+from flask_security import Security, SQLAlchemyUserDatastore, \
+	UserMixin, RoleMixin, login_required, current_user
+from sqlalchemy.sql import func
 
-from app import db
+from app import app, db
 
 class Rating(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -13,7 +17,7 @@ class Rating(db.Model):
 
 	def __init__(self, user, restaurant, rating):
 		self.restaurant = restaurant
- 		self.rating = rating
+		self.rating = rating
 		self.user = user
 
 	@staticmethod
@@ -34,6 +38,7 @@ class Restaurant(db.Model):
 	category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
 
 	rating = db.relationship('Rating', backref='restaurant')
+
 	def __init__(self, name=None, category=None, location=None):
 		self.name = name
 		self.category = category
@@ -55,94 +60,51 @@ class Category(db.Model):
 	def __unicode__(self):
 		return '%r' % str(self.name)
 
+# Define models
+roles_users = db.Table(
+	'roles_users',
+	db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+	db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+)
 
-class User(db.Model):
+
+class Role(db.Model, RoleMixin):
+	id = db.Column(db.Integer(), primary_key=True)
+	name = db.Column(db.String(80), unique=True)
+	description = db.Column(db.String(255))
+
+	def __unicode__(self):
+		return self.name
+
+	def __str__(self):
+		return self.name
+
+
+class User(db.Model, UserMixin):
 	id = db.Column(db.Integer, primary_key=True)
-	email = db.Column(db.String(120), unique=True)
-	username = db.Column(db.String(80), unique=True)
-
+	first_name = db.Column(db.String(30))
+	last_name = db.Column(db.String(30))
+	email = db.Column(db.String(30), unique=True)
+	username = db.Column(db.String(20), unique=True)
+	password = db.Column(db.String(255))
+	active = db.Column(db.Boolean())
+	confirmed_at = db.Column(db.DateTime())
+	roles = db.relationship('Role', secondary=roles_users,
+							backref=db.backref('users', lazy='dynamic'))
 	rating = db.relationship('Rating', backref='user')
 
-	def __init__(self, username=None, email=None):
-		self.username = username
-		self.email = email
+	def verify_pass(self, password):
+		return verify_password(password, self.password)
 
-		if not email:
-			self.email = self.username + '@gmail.com'
+	def __init__(self, **kwargs):
+		super(User, self).__init__(**kwargs)
+		self.email = kwargs.get('email', kwargs.get('username', '')) + '@gmail.com'
 
- 	def __unicode__(self):
+	def __unicode__(self):
 		return '%r' % str(self.username)
 
-db.drop_all()
-db.create_all()
-# '''
-# POPULATE DB
 
-u_albelto = User('albelto')
-u_freddy = User('freddy')
-u_mafer = User('mafer')
-u_nick = User('nick')
-u_eddy = User('eddy')
+# Setup Flask-Security
+user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+security = Security(app, user_datastore)
 
-category_fast_fo = Category('Comida Rapida')
-category_chinese = Category('Comida China')
-category_italian = Category('Comida Italiana')
-category_pizza = Category('pizeria')
-
-r_papa_johns = Restaurant('Papa John' , category_pizza, (18.4847289, -69.919273))
-r_buen_sabor = Restaurant('Buen Sabor', category_fast_fo, (18.5048942, -69.8862213))
-r_pizzahut = Restaurant('Pizzahut', category_pizza, (18.3048942, -69.8812213))
-r_tropical = Restaurant('Adrian Tropical', category_italian, (18.5048942, -69.8862213))
-r_teriyaki = Restaurant('Teriyaki', category_chinese, (18.2048942, -69.8662213))
-r_dominos = Restaurant('Dominos', category_pizza, (18.4048942, -69.8462213))
-r_mofongo = Restaurant('Mofonfo', category_fast_fo, (18.6048942, -69.8832213))
-
-# users
-db.session.add(u_nick)
-db.session.add(u_mafer)
-db.session.add(u_freddy)
-db.session.add(u_eddy)
-db.session.add(u_albelto)
-
-# restaurants
-db.session.add(r_papa_johns)
-db.session.add(r_buen_sabor)
-db.session.add(r_pizzahut)
-db.session.add(r_tropical)
-db.session.add(r_teriyaki)
-db.session.add(r_dominos)
-db.session.add(r_mofongo)
-
-# categories
-db.session.add(category_fast_fo)
-db.session.add(category_chinese)
-db.session.add(category_italian)
-db.session.add(category_pizza)
-
-# rating
-# rating between 1 and 5
-# db.session.add(Rating(r_pizzahut, 2))
-
-db.session.add(Rating(u_freddy, r_teriyaki, 2))
-db.session.add(Rating(u_freddy, r_buen_sabor, 3))
-db.session.add(Rating(u_freddy, r_pizzahut, 5))
-
-db.session.add(Rating(u_albelto, r_papa_johns, 1))
-db.session.add(Rating(u_albelto, r_pizzahut, 4))
-db.session.add(Rating(u_albelto, r_buen_sabor, 1))
-
-db.session.add(Rating(u_mafer, r_pizzahut, 4))
-db.session.add(Rating(u_mafer, r_teriyaki, 4))
-db.session.add(Rating(u_mafer, r_pizzahut, 5))
-db.session.add(Rating(u_mafer, r_tropical, 5))
-db.session.add(Rating(u_mafer, r_mofongo, 5))
-db.session.add(Rating(u_mafer, r_dominos, 5))
-
-db.session.add(Rating(u_eddy, r_dominos, 5))
-
-db.session.add(Rating(u_nick, r_tropical, 5))
-db.session.add(Rating(u_nick, r_teriyaki, 3))
-db.session.add(Rating(u_nick, r_pizzahut, 4))
-
-db.session.commit()
-# '''
