@@ -52,8 +52,11 @@
 			  	$http.get('/api/restaurant')
 			  		.then(function (res) {
 			  			$scope.restaurants = res.data.objects;
+
+			  			// sort restaurants list by name asc
+			  			$scope.restaurants.sort(function(a, b){return b.name < a.name});
 						showAllRestaurant();
-			  		})
+			  		});
 			}
 
 			// Sets the map on all markers in the array.
