@@ -43,8 +43,10 @@ class MyAdminIndexView(AdminIndexView):
 	@expose('/')
 	def index(self):
 		if not current_user.is_authenticated:
-			return redirect(url_for('.login'))
-		return super(MyAdminIndexView, self).index()
+			return redirect(url_for('login'))
+		top_rated = Rating.get_top_rated()
+		return self.render('admin/index.html', top_rated=top_rated)
+		# return super(MyAdminIndexView, self).index()
 
 	# @expose('/login/', methods=('GET', 'POST'))
 	# def login_view(self):

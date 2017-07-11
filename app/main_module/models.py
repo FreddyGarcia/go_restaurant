@@ -28,6 +28,14 @@ class Rating(db.Model):
 		records = [Record(*r)._asdict() for r in result.fetchall()]
 		return records
 
+	@staticmethod
+	def get_top_rated():
+		# call get_recomended stored procedure
+		result = db.session.execute('select * from top_rated')
+		Record = namedtuple('Record', result.keys())
+		records = [Record(*r)._asdict() for r in result.fetchall()]
+		return records
+
 
 
 class Restaurant(db.Model):
