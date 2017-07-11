@@ -68,6 +68,15 @@
 				setMapOnAll(null);
 			}
 
+			// remove marker from map
+			function removeMarker(restaurant) {
+				$scope.markers.forEach((item) =>{
+					if (item.id == restaurant.id) {
+						item.setMap(null);
+					}
+				});
+			}
+
 			// Shows any markers currently in the array.
 			function showMarkers() {
 				setMapOnAll(map);
@@ -103,7 +112,7 @@
 
 			function updateRestaurantPosition(restaurant, newPosition) {
 	        	$http.put('/api/restaurant/' + restaurant.id, newPosition)
-			}
+			} 
 
 			function addMarker(position, restaurant) {
 				// if marker on map exixsts, we remove it
@@ -115,11 +124,14 @@
 				// add market to map
 				var marker = new google.maps.Marker({
 					position: position,
-					icon : restaurantIco,
+					// icon : restaurantIco,
+					label : restaurant.name,
 					animation: google.maps.Animation.DROP,
 					draggable: true,
 					map: map
 				});
+
+				marker.id = restaurant.id;
 
 				// update restaurant latitude/longitude on marker drag
 		        marker.addListener('dragend', function (t) {
@@ -134,18 +146,20 @@
 				var stoDgo = {lat: 18.4847289, lng: -69.919273};
 				addMarker(stoDgo)
 				map.setCenter(stoDgo);
-				updateRestaurantPosition(stoDgo)
+				updateRestaurantPosition($scope.restaurant, stoDgo);
 			}
 
 		  	$scope.loadLocation = function (restaurant) {
-		        var position = {lat: restaurant.lat, lng: restaurant.lng};
-		  		$scope.restaurant = restaurant;
-		  		addMarker(position, restaurant);
-		  		map.setCenter(position);
+		  		$http.get('/api/restaurant/' + restaurant.id )
+		  			.then((res) => {
+		  				var restaurant = res.data;
+				        var position = {lat: restaurant.lat, lng: restaurant.lng};
+				  		$scope.restaurant = restaurant;
 
-		  		// reload restaurants
-		  		// deleteMarkers();
-		  		// getRestaurants();
+				  		removeMarker(restaurant);
+				  		addMarker(position, restaurant);
+				  		map.setCenter(position);
+		  			})
 		  	}
 
 		getRestaurants();
