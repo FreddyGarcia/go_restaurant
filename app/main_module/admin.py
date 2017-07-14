@@ -1,4 +1,4 @@
-from flask import redirect, render_template, url_for
+from flask import redirect, render_template, url_for, request
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.base import MenuLink
 from flask_admin.contrib.geoa import ModelView
@@ -18,7 +18,7 @@ class CustomModelView(ModelView):
 
 class RestaurantModelView(CustomModelView):
 	column_list = ('name', 'category')
-	form_excluded_columns = ['latitude', 'longitude', 'rating']
+	form_excluded_columns = ['lat', 'lng', 'rating']
 	column_labels = dict(name='Nombre', category='Categoria')
 
 
@@ -44,9 +44,9 @@ class MyAdminIndexView(AdminIndexView):
 	def index(self):
 		if not current_user.is_authenticated:
 			return redirect(url_for('login'))
-		top_rated = Rating.get_top_rated()
-		return self.render('admin/index.html', top_rated=top_rated)
-		# return super(MyAdminIndexView, self).index()
+
+		restaurants = Restaurant.query.all()
+		return self.render('admin/index.html', restaurants=restaurants)
 
 	# @expose('/login/', methods=('GET', 'POST'))
 	# def login_view(self):
