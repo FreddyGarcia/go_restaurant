@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, jsonify, request, render_template, url_fo
 import flask_login
 
 from app import app, login_manager
-from app.main_module.models import Rating, User
+from app.main_module.models import db, Rating, User, Restaurant
 
 routes = Blueprint('routes', __name__, url_prefix='/')
 
@@ -23,6 +23,7 @@ def login():
 	passw = request.form['password']
 	user = User.query.filter_by(email=email).first()
 
+
 	if user:
 		if user.verify_pass(passw):
 			flask_login.login_user(user)
@@ -39,10 +40,12 @@ def login():
 def protected():
 	return 'Logged in as: ' + str(flask_login.current_user.id)
 
+
 @app.route('/logout')
 def logout():
 	flask_login.logout_user()
 	return redirect(url_for('login'))
+
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
@@ -56,9 +59,30 @@ def recomended(user_id):
 	recomendations = Rating.get_recomendation_by_id(user_id)
 	return  jsonify(data=recomendations)
 
-@routes.route("api/give_recomendation/<restaurant_id>/<rate>")
+
+@routes.route("api/top_rated")
+def top_rated():
+	top_rated = Rating.get_top_rated()
+	return jsonify(top_rated)
+
+@routes.route("api/give_recomendation/<restaurant_id>/<rate>", methods=['GET', 'POST'])
 def give_recomendation(restaurant_id, rate):
-	return  jsonify({'restaurant' : restaurant_id, 'rate' : rate })
+	restaurant = Restaurant.query.filter_by(id=restaurant_id).one()
+	existing_rate = Rating.query.filter_by(user_id=flask_login.current_user.id, restaurant_id=restaurant_id).first()
+
+	if 	existing_rate:
+		existing_rate.rating = rate
+	else:
+		rating = Rating(flask_login.current_user, restaurant, rate)
+		db.session.add(rating)
+
+	db.session.commit()
+	return jsonify(True)
 
 app.register_blueprint(routes)
+
+
+
+
+
 
