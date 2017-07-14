@@ -11,9 +11,10 @@ from app import app, db
 class Rating(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	date = db.Column(db.DateTime, server_default=func.now())
-	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+	user_id = db.Column(db.Integer, db.ForeignKey('user.id'),)
 	restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurant.id'))
 	rating = db.Column(db.Integer, nullable=False)
+	__table_args__ = (db.UniqueConstraint("user_id", "restaurant_id"),)
 
 	def __init__(self, user, restaurant, rating):
 		self.restaurant = restaurant
