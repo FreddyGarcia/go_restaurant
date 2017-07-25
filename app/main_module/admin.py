@@ -1,14 +1,16 @@
 from flask import redirect, render_template, url_for, request
-from flask_admin import Admin, BaseView, expose, AdminIndexView
+from flask_admin import Admin, BaseView, expose, AdminIndexView, form
 from flask_admin.base import MenuLink
-from flask_admin.contrib.geoa import ModelView
+from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user
+from jinja2 import Markup
+from os import path as os_path, remove as os_remove
+from werkzeug.utils import secure_filename
 
 from app import app, db
 from app.main_module.models import Restaurant, Rating, Category, User
 
 # Administration Site
-
 class CustomModelView(ModelView):
 	pass
 	# def is_accessible(self):
@@ -17,10 +19,31 @@ class CustomModelView(ModelView):
 
 
 class RestaurantModelView(CustomModelView):
-	column_list = ('name', 'category')
+	column_list = ('name', 'category', 'thumbnail')
 	form_excluded_columns = ['lat', 'lng', 'rating']
-	column_labels = dict(name='Nombre', category='Categoria')
+	column_labels = dict(name='Nombre', category='Categoria', thumbnail='Miniatura')
 
+	def prefix_name(obj, file_data):
+	    parts = os_path.splitext(file_data.filename)
+	    return secure_filename('file-%s%s' % parts)
+
+	form_extra_fields = {
+		'thumbnail' : form.ImageUploadField('Miniatura',
+										base_path=app.config['UPLOAD_IMG_FOLDER'],
+										namegen=prefix_name,
+										thumbnail_size=(100,100, True))
+	}
+
+
+	def _list_thumbnail(view, contet, model, name):
+		if not model.thumbnail:
+			return Markup('<img width=28 src="/static/default.ico" />')
+
+		return Markup('<img width=28  src="%s" />' %  url_for('static',filename=form.thumbgen_filename(model.thumbnail)))
+
+	column_formatters = {
+		'thumbnail' : _list_thumbnail
+	}
 
 class UserModelView(CustomModelView):
 	column_list = ('email', 'username')

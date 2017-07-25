@@ -1,9 +1,11 @@
 # app.models
 from collections import namedtuple
+from flask_admin import form
 from flask_admin import helpers as admin_helpers
 from flask_security.utils import verify_password
 from flask_security import Security, SQLAlchemyUserDatastore, \
 	UserMixin, RoleMixin, login_required, current_user
+from os import path as os_path
 from sqlalchemy.sql import func
 
 from app import app, db
@@ -40,10 +42,11 @@ class Rating(db.Model):
 
 
 class Restaurant(db.Model):
-	id 	= db.Column(db.Integer, primary_key=True)
+	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(80), unique=True, nullable=False)
 	lat = db.Column(db.NUMERIC(20,8), nullable=False)
 	lng = db.Column(db.NUMERIC(20,8), nullable=False)
+	thumbnail = db.Column(db.Unicode(128))
 	category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
 
 	rating = db.relationship('Rating', backref='restaurant')
@@ -56,6 +59,29 @@ class Restaurant(db.Model):
 
 	def __unicode__(self):
 		return '%r' % str(self.name)
+
+@db.event.listens_for(Restaurant, 'after_delete')
+def del_image(mapper, connection, target):
+	if target.thumbnail:
+		# delete image
+		try:
+			os_remove(os_path.join(app.config['UPLOAD_IMG_FOLDER'], target.thumbnail))
+		except Exception as e:
+			pass
+
+		try:
+			os_remove(os_path.join(app.config['UPLOAD_IMG_FOLDER'],
+					form.thumbgen_filename(target.thumbnail)))
+		except Exception as e:
+			pass
+
+# @db.event.listens_for(Restaurant, 'before_update')
+# @db.event.listens_for(Restaurant, 'before_insert')
+# def ren_image(mapper, connection, target):
+# 	if target.thumbnail:
+# 		target.thumbnail = os_path.join(target.name, target.thumbnail)
+# 		print(target)
+# 		print(target.thumbnail)
 
 
 class Category(db.Model):
