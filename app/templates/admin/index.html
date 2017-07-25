@@ -1,0 +1,78 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+<div class="col-md-3">
+	<div class="list-group top_rated">
+		<a href="#" class="list-group-item active"><STRONG>Best rated restaurants</STRONG></a>
+	</div>
+</div>
+
+<div class="col-md-5">
+
+	<div class="panel panel-default">
+	 <div class="panel-heading">
+	    <h3 class="panel-title">Rate restaurant</h3>
+	  </div>
+
+	  <div class="panel-body">
+			<form class="form-inline" name='form' method="post">
+
+			  <div class="form-group">
+			  	<select name="restaurant" id="" class='form-control'>
+			  		{% for r in restaurants%}
+				  		<option value="{{r.id}}">{{r.name}}</option>
+			  		{% endfor %}
+			  	</select>
+			  </div>
+
+			  <div class="form-group">
+			  	<select name="rate" id="" class='form-control'>
+				  	<option value="1">1</option>
+				  	<option value="2">2</option>
+				  	<option value="3">3</option>
+			  	</select>
+			  </div>
+			  <button type="submit" class="btn btn-default">Rate</button>
+			</form>
+	  </div>
+	</div>
+
+</div>
+<script src="/admin/static/vendor/jquery.min.js?v=2.1.4" type="text/javascript"></script>
+<script>
+
+	var rate_restaurant = function () {
+		$('form').on('submit', function (e) {
+
+			var rest = this.restaurant.value;
+			var rate = this.rate.value;
+
+			$.post('/api/give_recomendation/' + rest + '/' + rate )
+				.success(function (res) {
+					if (res) {
+						alert('restaurante evalueado');
+						load_restaurants();
+					}
+				});
+			e.preventDefault();
+		})
+	}
+
+	var load_restaurants = function () {
+		$.get('/api/top_rated')
+			.success(function (res) {
+				$('.tmp').remove();
+				res.forEach(function (item) {
+					var rate = parseFloat(Math.round(item.rate * 100) / 100).toFixed(2);
+					$('.top_rated').append('<a href="#" class="list-group-item tmp">' + item.name +'<span class="badge">' + rate +'</span></a>');
+				})
+			});
+	}
+
+	$(document).on('ready', rate_restaurant);
+	$(document).on('ready', load_restaurants);
+
+
+</script>
+{% endblock %}
