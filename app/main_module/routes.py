@@ -1,7 +1,8 @@
-from flask import Blueprint, redirect, jsonify, request, render_template, url_for, flash
-import flask_login
+from flask import Blueprint, redirect, jsonify, request, render_template, url_for, flash, g
+from http import HTTPStatus
 
-from app import app, login_manager
+import flask_login
+from app import app, login_manager, auth
 from app.main_module.models import db, Rating, User, Restaurant
 
 routes = Blueprint('routes', __name__, url_prefix='/')
@@ -23,7 +24,6 @@ def login():
 	passw = request.form['password']
 	user = User.query.filter_by(email=email).first()
 
-
 	if user:
 		if user.verify_pass(passw):
 			flask_login.login_user(user)
@@ -34,6 +34,31 @@ def login():
 		flash('Usuario no encontrado', 'login_error')
 
 	return render_template('authentication/login.html')
+
+
+@app.route('/api/token')
+@auth.login_required
+def get_auth_token():
+	token = g.user.generate_auth_token()
+	return jsonify(token=token.decode('ascii'))
+
+
+@app.route('/api')
+@auth.login_required
+def it_works():
+	return 'It Works!'
+
+
+@auth.verify_password
+def verify_password(username_or_token, password):
+    user = User.verify_auth_token(username_or_token)
+
+    if not user:
+        user = User.query.filter_by(username = username_or_token).first()
+        if not user or not user.verify_password(password):
+            return False
+    g.user = user
+    return True
 
 @app.route('/protected')
 @flask_login.login_required
@@ -65,6 +90,7 @@ def top_rated():
 	top_rated = Rating.get_top_rated()
 	return jsonify(top_rated)
 
+
 @routes.route("api/give_recomendation/<restaurant_id>/<rate>", methods=['GET', 'POST'])
 def give_recomendation(restaurant_id, rate):
 	restaurant = Restaurant.query.filter_by(id=restaurant_id).one()
@@ -80,9 +106,6 @@ def give_recomendation(restaurant_id, rate):
 	return jsonify(True)
 
 app.register_blueprint(routes)
-
-
-
 
 
 

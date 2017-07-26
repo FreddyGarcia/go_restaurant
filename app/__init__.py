@@ -1,10 +1,13 @@
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+from flask_httpauth import HTTPBasicAuth
 from flask_login import LoginManager
-
+from flask_sqlalchemy import SQLAlchemy
 
 # App Instance
 app = Flask(__name__)
+
+# Http Auth Instance
+auth = HTTPBasicAuth()
 
 # Login manager instance
 login_manager = LoginManager()
