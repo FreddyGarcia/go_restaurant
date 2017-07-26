@@ -1,8 +1,8 @@
-from flask import Blueprint, redirect, jsonify, request, render_template, url_for, flash
+from flask import Blueprint, redirect, jsonify, request, render_template, url_for, flash, g
 from http import HTTPStatus
 
 import flask_login
-from app import app, login_manager
+from app import app, login_manager, auth
 from app.main_module.models import db, Rating, User, Restaurant
 
 routes = Blueprint('routes', __name__, url_prefix='/')
@@ -35,23 +35,30 @@ def login():
 
 	return render_template('authentication/login.html')
 
+
+@app.route('/api/token')
+@auth.login_required
+def get_auth_token():
+	token = g.user.generate_auth_token()
+	return jsonify(token=token.decode('ascii'))
+
+
 @app.route('/api')
+@auth.login_required
 def it_works():
 	return 'It Works!'
 
 
-@app.route('/api/login/<user>/<password>')
-def api_login(user = None, password = None):
-	user = User.query.filter_by(username=user).first()
+@auth.verify_password
+def verify_password(username_or_token, password):
+    user = User.verify_auth_token(username_or_token)
 
-	if user:
-		if user.verify_pass(password):
-			flask_login.login_user(user)
-			return  '', HTTPStatus.OK
-		else:
-			return  '', HTTPStatus.FORBIDDEN
-	else:
-		return  '', HTTPStatus.NOT_FOUND
+    if not user:
+        user = User.query.filter_by(username = username_or_token).first()
+        if not user or not user.verify_password(password):
+            return False
+    g.user = user
+    return True
 
 @app.route('/protected')
 @flask_login.login_required

@@ -5,6 +5,8 @@ from flask_admin import helpers as admin_helpers
 from flask_security.utils import verify_password
 from flask_security import Security, SQLAlchemyUserDatastore, \
 	UserMixin, RoleMixin, login_required, current_user
+from itsdangerous import (TimedJSONWebSignatureSerializer
+                          as Serializer, BadSignature, SignatureExpired)
 from os import path as os_path
 from sqlalchemy.sql import func
 
@@ -75,14 +77,6 @@ def del_image(mapper, connection, target):
 		except Exception as e:
 			pass
 
-# @db.event.listens_for(Restaurant, 'before_update')
-# @db.event.listens_for(Restaurant, 'before_insert')
-# def ren_image(mapper, connection, target):
-# 	if target.thumbnail:
-# 		target.thumbnail = os_path.join(target.name, target.thumbnail)
-# 		print(target)
-# 		print(target.thumbnail)
-
 
 class Category(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -128,8 +122,12 @@ class User(db.Model, UserMixin):
 							backref=db.backref('users', lazy='dynamic'))
 	rating = db.relationship('Rating', backref='user')
 
-	def verify_pass(self, password):
+	def verify_password(self, password):
 		return verify_password(password, self.password)
+
+	def generate_auth_token(self, expiration=120):
+		serializer = Serializer(app.config['SECRET_KEY'], expires_in = expiration)
+		return serializer.dumps({ 'id' : self.id})
 
 	def __init__(self, **kwargs):
 		super(User, self).__init__(**kwargs)
@@ -137,6 +135,20 @@ class User(db.Model, UserMixin):
 
 	def __unicode__(self):
 		return '%r' % str(self.username)
+
+	@staticmethod
+	def verify_auth_token(token):
+		serializer = Serializer(app.config['SECRET_KEY'])
+
+		try:
+			data = serializer.loads(token)
+		except SignatureExpired: # valid but expired
+			return None
+		except BadSignature: # invalid
+			return None
+
+		user = User.query.filter_by(id=data.get('id')).first()
+		return user
 
 
 # Setup Flask-Security
