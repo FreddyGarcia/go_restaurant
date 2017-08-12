@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, jsonify, request, render_template, url_for, flash, g
+from flask import Blueprint, redirect, jsonify, request, render_template, url_for, flash, g, session
 from http import HTTPStatus
 
 import flask_login
@@ -6,6 +6,7 @@ from app import app, login_manager, auth
 from app.main_module.models import db, Rating, User, Restaurant
 
 routes = Blueprint('routes', __name__, url_prefix='/')
+settings = {'min_rate' : 0}
 
 @routes.route("")
 def works():
@@ -25,7 +26,7 @@ def login():
 	user = User.query.filter_by(email=email).first()
 
 	if user:
-		if user.verify_pass(passw):
+		if user.verify_password(passw):
 			flask_login.login_user(user)
 			return redirect('/admin')
 		else:
@@ -36,7 +37,7 @@ def login():
 	return render_template('authentication/login.html')
 
 
-@app.route('/api/token')
+@app.route('/api/token', methods=['GET', 'POST'])
 @auth.login_required
 def get_auth_token():
 	token = g.user.generate_auth_token()
@@ -46,7 +47,8 @@ def get_auth_token():
 @app.route('/api')
 @auth.login_required
 def it_works():
-	return 'It Works!'
+	return str(session['settings'])
+	# return 'It works!'
 
 
 @auth.verify_password
@@ -76,19 +78,27 @@ def logout():
 def unauthorized_handler():
 	return 'Unauthorized'
 
-# # # # # # # # # # # # # # # # # # # # #
- # # # # # # # recomendations # # # # #
-# # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # # # # # # # # # recomendations  # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @routes.route("api/recomendation/<user_id>")
 def recomended(user_id):
-	recomendations = Rating.get_recomendation_by_id(user_id)
-	return  jsonify(data=recomendations)
+
+	min_rate = 0
+	settings = session.get('settings')
+
+	if settings.get('take_rate'):
+		min_rate = settings.get('min_rate')
+
+	recomendations = Rating.get_recomendation_by_id(user_id, min_rate)
+	return jsonify(data=recomendations)
 
 
 @routes.route("api/top_rated")
 def top_rated():
 	top_rated = Rating.get_top_rated()
 	return jsonify(top_rated)
+
 
 
 @routes.route("api/give_recomendation/<restaurant_id>/<rate>", methods=['GET', 'POST'])
@@ -104,6 +114,16 @@ def give_recomendation(restaurant_id, rate):
 
 	db.session.commit()
 	return jsonify(True)
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ # # # # # # # # # recomendations  # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+@routes.route("api/define_settings/<take_rate>/<min_rate>")
+def define_settings(take_rate, min_rate):
+	session['settings'] = { 'take_rate' : take_rate.lower() in ("yes", "true", "t", "1"), 'min_rate' : int(min_rate) }
+	return 'Ok'
 
 app.register_blueprint(routes)
 

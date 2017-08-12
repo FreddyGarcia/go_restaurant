@@ -14,6 +14,7 @@ with app.app_context():
 	db.session.add(super_user_role)
 	db.session.commit()
 
+	# right way to create a user
 	user_datastore.create_user(
 	    first_name='Admin',
 	    username='Administrator',
@@ -22,11 +23,36 @@ with app.app_context():
 	    roles=[user_role, super_user_role]
 	)
 
-	u_albelto = User(username='albelto',password=encrypt_password('test'),roles=[user_role, super_user_role])
-	u_freddy = User(username='freddy',password=encrypt_password('test'))
+	u_albelto = user_datastore.create_user(
+	    first_name='albelto',
+	    username='albelto',
+	    password=encrypt_password('alberto'),
+	    roles=[user_role, super_user_role]
+	)
+
+	u_nick = user_datastore.create_user(
+	    first_name='nick',
+	    username='nick',
+	    password=encrypt_password('nick'),
+	    roles=[user_role, super_user_role]
+	)
+
+	u_freddy = user_datastore.create_user(
+	    first_name='freddy',
+	    username='freddy',
+	    password=encrypt_password('freddy'),
+	    roles=[user_role, super_user_role]
+	)
+
+	u_tester = user_datastore.create_user(
+	    first_name='tester',
+	    username='tester',
+	    password=encrypt_password('tester'),
+	    roles=[user_role, super_user_role]
+	)
+
 	u_mafer = User(username='mafer',password=encrypt_password('test'))
-	u_nick = User(username='nick',password=encrypt_password('test'))
-	u_eddy = User(username='eddy',password=encrypt_password('test'))
+	u_eddy = User(username='eddy',password=encrypt_password('decode'))
 
 	category_fast_fo = Category('Comida Rapida')
 	category_chinese = Category('Comida China')
@@ -46,7 +72,7 @@ with app.app_context():
 	db.session.add(u_mafer)
 	db.session.add(u_freddy)
 	db.session.add(u_eddy)
-	db.session.add(u_albelto)
+	db.session.add(u_tester)
 
 	# restaurants
 	db.session.add(r_papa_johns)
@@ -84,6 +110,14 @@ with app.app_context():
 
 	db.session.add(Rating(u_nick, r_tropical, 2))
 	db.session.add(Rating(u_nick, r_buen_sabor, 1))
+
+	# db.session.add(Rating(u_tester, r_buen_sabor, 1))
+	# db.session.add(Rating(u_tester, r_pizzahut, 1	))
+	# db.session.add(Rating(u_tester, r_tropical, 2))
+	# db.session.add(Rating(u_tester, r_teriyaki, 1))
+	# db.session.add(Rating(u_tester, r_papa_johns, 2))
+	db.session.add(Rating(u_tester, r_dominos, 2))
+	# db.session.add(Rating(u_tester, r_mofongo, 1))
 
 	db.session.commit()
 	# '''

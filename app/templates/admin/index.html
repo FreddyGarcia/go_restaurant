@@ -2,45 +2,92 @@
 
 {% block body %}
 
-<div class="col-md-3">
-	<div class="list-group top_rated">
-		<a href="#" class="list-group-item active"><STRONG>Best rated restaurants</STRONG></a>
-	</div>
+<div ng-app='gorestaurant'>
+   <div ng-controller='MainController'>
+      <div class="col-md-3">
+         <div class="list-group top_rated">
+            <a href="#" class="list-group-item active"><STRONG>Best rated restaurants</STRONG></a>
+         </div>
+      </div>
+      <div class="col-md-5">
+         <div class="panel panel-default">
+            <div class="panel-heading">
+               <h3 class="panel-title">Rate restaurant</h3>
+            </div>
+            <div class="panel-body">
+               <form class="form-inline" name='form' method="post">
+                  <div class="form-group">
+                     <select name="restaurant" id="" class='form-control'>
+                        {% for r in restaurants%}
+                        <option value="{{r.id}}">{{r.name}}</option>
+                        {% endfor %}
+                     </select>
+                  </div>
+                  <div class="form-group">
+                     <select name="rate" id="" class='form-control'>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                     </select>
+                  </div>
+                  <button type="submit" class="btn btn-default">Rate <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></button>
+               </form>
+            </div>
+         </div>
+      </div>
+      <div class="col-md-12">
+         <div class="panel panel-default">
+            <div class="panel-heading">
+               <h3 class="panel-title">Rate Settings</h3>
+            </div>
+            <div class="panel-body">
+               <form class="form-horizontal">
+                  <div class="form-group">
+                     <label for="inputEmail3" class="col-sm-3 control-label">Take <i>Rate</i> in count for recomendations</label>
+                     <div class="col-sm-6">
+                        <div class="checkbox">
+                           <label>
+                           <input type="checkbox" ng-model='take_rate' ng-init='take_rate = true'>
+                           </label>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="form-group" ng-show='take_rate == true'>
+                     <label for="inputEmail3" class="col-sm-3 control-label">Minimal rate for recomendations</label>
+                     <div class="col-sm-2">
+                        <input type="range" min="0" max="3" step=".1" class='form-control' ng-model='minimal_rate'>
+                     </div>
+                     <div class="col-sm-1">
+                        <input type="text" value='[[minimal_rate]]' readonly class="form-control" />
+                     </div>
+                  </div>
+                  <div class="form-group">
+                     <div class="col-sm-offset-10 col-sm-2">
+                        <button type="submit" class="btn btn-default">Save <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span></button>
+                     </div>
+                  </div>
+               </form>
+            </div>
+         </div>
+      </div>
+   </div>
 </div>
 
-<div class="col-md-5">
 
-	<div class="panel panel-default">
-	 <div class="panel-heading">
-	    <h3 class="panel-title">Rate restaurant</h3>
-	  </div>
-
-	  <div class="panel-body">
-			<form class="form-inline" name='form' method="post">
-
-			  <div class="form-group">
-			  	<select name="restaurant" id="" class='form-control'>
-			  		{% for r in restaurants%}
-				  		<option value="{{r.id}}">{{r.name}}</option>
-			  		{% endfor %}
-			  	</select>
-			  </div>
-
-			  <div class="form-group">
-			  	<select name="rate" id="" class='form-control'>
-				  	<option value="1">1</option>
-				  	<option value="2">2</option>
-				  	<option value="3">3</option>
-			  	</select>
-			  </div>
-			  <button type="submit" class="btn btn-default">Rate</button>
-			</form>
-	  </div>
-	</div>
-
-</div>
 <script src="/admin/static/vendor/jquery.min.js?v=2.1.4" type="text/javascript"></script>
+<!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 <script>
+
+	var app = angular.module('gorestaurant', []);
+
+	app.config(['$interpolateProvider', function($interpolateProvider) {
+	  $interpolateProvider.startSymbol('[[');
+	  $interpolateProvider.endSymbol(']]');
+	}]);
+
+	app.controller('MainController', function ($scope) {
+	})
 
 	var rate_restaurant = function () {
 		$('form').on('submit', function (e) {

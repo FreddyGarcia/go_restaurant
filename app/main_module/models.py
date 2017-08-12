@@ -26,9 +26,9 @@ class Rating(db.Model):
 		self.user = user
 
 	@staticmethod
-	def get_recomendation_by_id(user_id):
+	def get_recomendation_by_id(user_id, minimal_rate = 0):
 		# call get_recomended stored procedure
-		result = db.session.execute('call get_recomended({0})'.format(user_id))
+		result = db.session.execute('call get_recomended({0},{1})'.format(user_id, minimal_rate))
 		Record = namedtuple('Record', result.keys())
 		records = [Record(*r)._asdict() for r in result.fetchall()]
 		return records
@@ -86,8 +86,8 @@ class Category(db.Model):
 	def __init__(self, name=None):
 		self.name = name
 
-	def __unicode__(self):
-		return '%r' % str(self.name)
+	def __str__(self):
+		return str(self.name)
 
 # Define models
 roles_users = db.Table(
